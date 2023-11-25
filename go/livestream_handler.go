@@ -496,12 +496,12 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		return Livestream{}, err
 	}
 
-	// var livestreamTagModels []*LivestreamTagModel
-	// if err := tx.SelectContext(ctx, &livestreamTagModels, "SELECT * FROM livestream_tags WHERE livestream_id = ?", livestreamModel.ID); err != nil {
-	// 	return Livestream{}, err
-	// }
+	var livestreamTagModels []*LivestreamTagModel
+	if err := tx.SelectContext(ctx, &livestreamTagModels, "SELECT * FROM livestream_tags WHERE livestream_id = ?", livestreamModel.ID); err != nil {
+		return Livestream{}, err
+	}
 
-	// tags := make([]Tag, len(livestreamTagModels))
+	tags := make([]Tag, len(livestreamTagModels))
 	// for i := range livestreamTagModels {
 	// 	tagModel := TagModel{}
 	// 	if err := tx.GetContext(ctx, &tagModel, "SELECT * FROM tags WHERE id = ?", livestreamTagModels[i].TagID); err != nil {
@@ -514,7 +514,7 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 	// 	}
 	// }
 
-	var tags []Tag
+	// tags := make([]Tag, len(livestreamTagModels))
 
 	query := `
 SELECT t.id AS id, t.name AS name
@@ -522,9 +522,18 @@ FROM tags t
 JOIN livestream_tags lt ON t.id = lt.tag_id
 WHERE lt.livestream_id = ?
 `
-	err = tx.SelectContext(ctx, &tags, query, livestreamModel.ID)
+	var tagsDB []TagModel
+	err = tx.SelectContext(ctx, &tagsDB, query, livestreamModel.ID)
 	if err != nil {
 		return Livestream{}, err
+	}
+
+	// tagsDBをtagsに変換
+	for i := range tagsDB {
+		tags[i] = Tag{
+			ID:   tagsDB[i].ID,
+			Name: tagsDB[i].Name,
+		}
 	}
 
 	// この時点で `tags` には必要なデータが含まれています
