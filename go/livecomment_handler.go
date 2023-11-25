@@ -381,13 +381,13 @@ func moderateHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get last inserted NG word id: "+err.Error())
 	}
 
-	var ngwords []*NGWord
-	if err := tx.SelectContext(ctx, &ngwords, "SELECT * FROM ng_words WHERE livestream_id = ?", livestreamID); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG words: "+err.Error())
-	}
+	// var ngwords []*NGWord
+	// if err := tx.SelectContext(ctx, &ngwords, "SELECT * FROM ng_words WHERE livestream_id = ?", livestreamID); err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "failed to get NG words: "+err.Error())
+	// }
 
 	// NGワードにヒットする過去の投稿も全削除する
-	for _, ngword := range ngwords {
+	// for _, ngword := range ngwords {
 	// 	// ライブコメント一覧取得
 	// 	var livecomments []*LivecommentModel
 	// 	if err := tx.SelectContext(ctx, &livecomments, "SELECT * FROM livecomments"); err != nil {
@@ -414,7 +414,7 @@ func moderateHandler(c echo.Context) error {
 	// }
 
 	var livecomments []*LivecommentModel
-	if err := tx.SelectContext(ctx, &livecomments, "SELECT * FROM livecomments"); err != nil {
+	if err := tx.SelectContext(ctx, &livecomments, "SELECT * FROM livecomments where livestream_id = ?", livestreamID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get livecomments: "+err.Error())
 	}
 
