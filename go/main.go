@@ -123,9 +123,6 @@ func initializeHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
 
-	// hash計算開始ログを出す
-	c.Logger().Infof("hash計算開始")
-
 	// iconsテーブルのhashカラムを計算して入れる
 	// まずは、全てのレコードを取得
 	var images []IconModel
@@ -136,9 +133,6 @@ func initializeHandler(c echo.Context) error {
 		// idを指定して更新
 		dbConn.MustExec("UPDATE icons SET hash = ? WHERE id = ?", iconHash[:], image.ID)
 	}
-
-	// hash計算完了ログを出す
-	c.Logger().Infof("hash計算完了")
 
 	// 追加
 	go func() {
