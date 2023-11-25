@@ -144,7 +144,12 @@ func postIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old user icon: "+err.Error())
 	}
 
-	rs, err := tx.ExecContext(ctx, "INSERT INTO icons (user_id, image) VALUES (?, ?)", userID, req.Image)
+	// rs, err := tx.ExecContext(ctx, "INSERT INTO icons (user_id, image) VALUES (?, ?)", userID, req.Image)
+
+	// 画像のハッシュを計算して、DBに保存する
+	iconHash := sha256.Sum256(req.Image)
+	rs, err := tx.ExecContext(ctx, "INSERT INTO icons (user_id, image, hash) VALUES (?, ?, ?)", userID, req.Image, iconHash)
+
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
 	}
