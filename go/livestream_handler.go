@@ -486,6 +486,8 @@ func getLivecommentReportsHandler(c echo.Context) error {
 
 func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel LivestreamModel) (Livestream, error) {
 	ownerModel := UserModel{}
+
+	// オーナーを取得
 	if err := tx.GetContext(ctx, &ownerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
 		return Livestream{}, err
 	}
@@ -494,23 +496,38 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		return Livestream{}, err
 	}
 
-	var livestreamTagModels []*LivestreamTagModel
-	if err := tx.SelectContext(ctx, &livestreamTagModels, "SELECT * FROM livestream_tags WHERE livestream_id = ?", livestreamModel.ID); err != nil {
+	// var livestreamTagModels []*LivestreamTagModel
+	// if err := tx.SelectContext(ctx, &livestreamTagModels, "SELECT * FROM livestream_tags WHERE livestream_id = ?", livestreamModel.ID); err != nil {
+	// 	return Livestream{}, err
+	// }
+
+	// tags := make([]Tag, len(livestreamTagModels))
+	// for i := range livestreamTagModels {
+	// 	tagModel := TagModel{}
+	// 	if err := tx.GetContext(ctx, &tagModel, "SELECT * FROM tags WHERE id = ?", livestreamTagModels[i].TagID); err != nil {
+	// 		return Livestream{}, err
+	// 	}
+
+	// 	tags[i] = Tag{
+	// 		ID:   tagModel.ID,
+	// 		Name: tagModel.Name,
+	// 	}
+	// }
+
+	var tags []Tag
+
+	query := `
+SELECT t.id, t.name
+FROM tags t
+JOIN livestream_tags lt ON t.id = lt.tag_id
+WHERE lt.livestream_id = ?
+`
+	err = tx.SelectContext(ctx, &tags, query, livestreamModel.ID)
+	if err != nil {
 		return Livestream{}, err
 	}
 
-	tags := make([]Tag, len(livestreamTagModels))
-	for i := range livestreamTagModels {
-		tagModel := TagModel{}
-		if err := tx.GetContext(ctx, &tagModel, "SELECT * FROM tags WHERE id = ?", livestreamTagModels[i].TagID); err != nil {
-			return Livestream{}, err
-		}
-
-		tags[i] = Tag{
-			ID:   tagModel.ID,
-			Name: tagModel.Name,
-		}
-	}
+	// この時点で `tags` には必要なデータが含まれています
 
 	livestream := Livestream{
 		ID:           livestreamModel.ID,
