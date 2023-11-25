@@ -58,13 +58,6 @@ type ThemeModel struct {
 	DarkMode bool  `db:"dark_mode"`
 }
 
-type ThemeModel2 struct {
-	ID       int64 `db:"id"`
-	UserID   int64 `db:"user_id"`
-	DarkMode bool  `db:"dark_mode"`
-	Image    []byte  `db:"image"`
-}
-
 type PostUserRequest struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
@@ -406,17 +399,22 @@ func verifyUserSession(c echo.Context) error {
 }
 
 func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (User, error) {
-	themeModel := ThemeModel2{}
-	if err := tx.GetContext(ctx, &themeModel, "select t.*,i.image from themes t, icons i where t.user_id = ? and i.user_id = ?", userModel.ID, userModel.ID); err != nil {
+	themeModel := ThemeModel{}
+	if err := tx.GetContext(ctx, &themeModel, "SELECT * FROM themes WHERE user_id = ?", userModel.ID); err != nil {
+		return User{}, err
+	}
+
+	var image []byte
+	if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return User{}, err
 		}
-		themeModel.Image, err = os.ReadFile(fallbackImage)
+		image, err = os.ReadFile(fallbackImage)
 		if err != nil {
 			return User{}, err
 		}
 	}
-	iconHash := sha256.Sum256(themeModel.Image)
+	iconHash := sha256.Sum256(image)
 
 	user := User{
 		ID:          userModel.ID,
