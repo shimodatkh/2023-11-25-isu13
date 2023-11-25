@@ -525,6 +525,8 @@ WHERE lt.livestream_id = ?
 	var tagsDB []TagModel
 	err = tx.SelectContext(ctx, &tagsDB, query, livestreamModel.ID)
 	if err != nil {
+		// エラーログ
+		ctx.Value("logger").(echo.Logger).Errorf("タグ取得のエラーfailed to get tags: %v", err)
 		return Livestream{}, err
 	}
 
