@@ -197,6 +197,7 @@ func searchLivestreamsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get keyTaggedLivestreams: "+err.Error())
 		}
 
+		// タグに該当するlivestreamを取得
 		for _, keyTaggedLivestream := range keyTaggedLivestreams {
 			ls := LivestreamModel{}
 			if err := tx.GetContext(ctx, &ls, "SELECT * FROM livestreams WHERE id = ?", keyTaggedLivestream.LivestreamID); err != nil {
