@@ -494,6 +494,15 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		return Livestream{}, err
 	}
 
+	livestream, err :=fillLivestreamResponse2(ctx, tx, livestreamModel,owner)
+	if err != nil {
+		return Livestream{}, err
+	}
+
+	return livestream, nil
+}
+
+func fillLivestreamResponse2(ctx context.Context, tx *sqlx.Tx, livestreamModel LivestreamModel, owner User) (Livestream, error) {
 	var livestreamTagModels []*LivestreamTagModel
 	if err := tx.SelectContext(ctx, &livestreamTagModels, "SELECT * FROM livestream_tags WHERE livestream_id = ?", livestreamModel.ID); err != nil {
 		return Livestream{}, err
@@ -524,4 +533,14 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		EndAt:        livestreamModel.EndAt,
 	}
 	return livestream, nil
+}
+
+type ReserveLivestreamRequest struct {
+	Tags         []int64 `json:"tags"`
+	Title        string  `json:"title"`
+	Description  string  `json:"description"`
+	PlaylistUrl  string  `json:"playlist_url"`
+	ThumbnailUrl string  `json:"thumbnail_url"`
+	StartAt      int64   `json:"start_at"`
+	EndAt        int64   `json:"end_at"`
 }
