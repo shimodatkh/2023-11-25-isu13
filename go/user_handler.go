@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
 	"time"
 
@@ -422,7 +423,16 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 
 	var iconHash string
 	if err := tx.GetContext(ctx, &iconHash, "SELECT hash FROM icons WHERE user_id = ?", userModel.ID); err != nil {
-		return User{}, err
+		if !errors.Is(err, sql.ErrNoRows) {
+			return User{}, err
+		}
+		var image []byte
+		image, err = os.ReadFile(fallbackImage)
+		if err != nil {
+			return User{}, err
+		}
+		iconHashByte := sha256.Sum256(image)
+		iconHash = fmt.Sprintf("%x", iconHashByte)
 	}
 
 	user := User{
