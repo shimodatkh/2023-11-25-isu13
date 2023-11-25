@@ -135,10 +135,10 @@ func getUserStatisticsHandler(c echo.Context) error {
 	// }
 
 	type UserRankingData struct {
-		UserID    int64
-		Username  string
-		Reactions int64
-		Tips      int64
+		UserID    int64  `db:"UserID"`
+		Username  string `db:"Username"`
+		Reactions int64  `db:"Reactions"`
+		Tips      int64  `db:"Tips"`
 	}
 
 	var userRankingData []UserRankingData
