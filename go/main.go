@@ -4,6 +4,7 @@ package main
 // sqlx的な参考: https://jmoiron.github.io/sqlx/
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"net"
@@ -108,10 +109,29 @@ func connectDB(logger echo.Logger) (*sqlx.DB, error) {
 	return db, nil
 }
 
+// 追加
+type IconModel struct {
+	ID     int64  `db:"id"`
+	UserID int64  `db:"user_id"`
+	Image  []byte `db:"image"`
+	Hash   string `db:"hash"`
+}
+
 func initializeHandler(c echo.Context) error {
 	if out, err := exec.Command("../sql/init.sh").CombinedOutput(); err != nil {
 		c.Logger().Warnf("init.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
+	}
+
+	// iconsテーブルのhashカラムを計算して入れる
+	// まずは、全てのレコードを取得
+	var images []IconModel
+	dbConn.Select(&images, "SELECT id, image FROM icons")
+	// それぞれのレコードについて、hashを計算して、更新する
+	for _, image := range images {
+		iconHash := sha256.Sum256(image.Image)
+		// idを指定して更新
+		dbConn.MustExec("UPDATE icons SET hash = ? WHERE id = ?", iconHash[:], image.ID)
 	}
 
 	// 追加
